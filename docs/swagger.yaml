@@ -1,0 +1,282 @@
+definitions:
+  entities.Task:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      status:
+        $ref: '#/definitions/entities.TaskStatus'
+      title:
+        type: string
+    type: object
+  entities.TaskStatus:
+    enum:
+    - TO_DO
+    - IN_PROGRESS
+    - DONE
+    type: string
+    x-enum-varnames:
+    - TaskStatusToDo
+    - TaskStatusInProgress
+    - TaskStatusDone
+  models.CreateTaskRequest:
+    properties:
+      description:
+        example: When 'later' turns into 'never', it's just your code's way of saying
+          it loves the TODO comments.
+        maxLength: 25500
+        minLength: 3
+        type: string
+      title:
+        example: Later is never
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  models.ResponseError:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  models.ResponseSuccess:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  models.UpdateTaskRequest:
+    properties:
+      description:
+        example: Coding without coffee is like debugging without a console log.
+        maxLength: 25500
+        minLength: 3
+        type: string
+      title:
+        example: Code runs, coffee fuels
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  models.UpdateTaskStatusRequest:
+    properties:
+      status:
+        enum:
+        - IN_PROGRESS
+        - DONE
+        type: string
+    required:
+    - status
+    type: object
+info:
+  contact:
+    name: Supachai
+  description: This is a simple task service API.
+  title: Task Service API
+  version: "1.0"
+paths:
+  /v1/tasks:
+    get:
+      consumes:
+      - application/json
+      description: List all tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tasks listed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.ResponseSuccess'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.Task'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: List all tasks
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Create a new task with the provided details
+      parameters:
+      - description: Task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Task created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.Task'
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Create a new task
+      tags:
+      - tasks
+  /v1/tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Update a task by its unique ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Task deleted successfully
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Update task details
+      tags:
+      - tasks
+    get:
+      consumes:
+      - application/json
+      description: Get a task using its unique ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task found successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.Task'
+              type: object
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Retrieve a task by ID
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Get a task using its unique ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task found successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.Task'
+              type: object
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Retrieve a task by ID
+      tags:
+      - tasks
+  /v1/tasks/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update a task by its unique ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Task details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateTaskStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task updated successfully
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Update task details
+      tags:
+      - tasks
+swagger: "2.0"
